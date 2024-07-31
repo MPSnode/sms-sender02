@@ -1,2 +1,2 @@
-echo "flask" > requirements.txt
-echo "twilio" >> requirements.txt
+flask
+twilio
