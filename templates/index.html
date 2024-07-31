@@ -4,21 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bulk SMS Sender</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Bulk SMS Sender</h1>
-        <div class="status">
-            <h2 id="balance">Twilio Balance: ${{ balance }}</h2>
+        <div>
+            <p>Balance Twilio: <strong>{{ balance }} USD</strong></p>
         </div>
-        <form id="smsForm" action="/send_sms" method="POST">
-            <textarea id="numbers" name="numbers" placeholder="Masukkan nomor telepon, pisahkan dengan koma" required></textarea>
-            <textarea id="message" name="message" placeholder="Masukkan pesan SMS" required></textarea>
+        <form id="sms-form">
+            <label for="target_number">Nomor Target:</label>
+            <input type="text" id="target_number" name="target_number" required>
+
+            <label for="message_body">Pesan:</label>
+            <textarea id="message_body" name="message_body" rows="4" required></textarea>
+
             <button type="submit">Kirim SMS</button>
         </form>
-        <div id="results" class="results"></div>
+
+        <div id="response-output"></div>
     </div>
-    <script src="/static/scripts.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#sms-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                $.ajax({
+                    url: '/send_sms',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        const statusClass = response.status === 'BERHASIL' ? 'status-valid' : 'status-invalid';
+                        const infoClass = response.info === 'BERHASIL' ? 'info-success' : 'info-failure';
+                        
+                        $('#response-output').html(`
+                            <p>Nomor Target: ${$('#target_number').val()} <span class="${statusClass}">${response.status}</span></p>
+                            <p>Pesan: ${response.message_body}</p>
+                            <p>Info: <span class="${infoClass}">${response.info}</span></p>
+                        `);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
