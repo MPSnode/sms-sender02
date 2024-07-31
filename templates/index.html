@@ -15,10 +15,10 @@
         </div>
         <form id="sms-form">
             <label for="target_number">Nomor Target:</label>
-            <input type="text" id="target_number" name="target_number" required>
+            <input type="text" id="target_number" name="target_number" required placeholder="+62851******">
 
             <label for="message_body">Pesan:</label>
-            <textarea id="message_body" name="message_body" rows="4" required></textarea>
+            <textarea id="message_body" name="message_body" rows="4" required placeholder="Masukkan pesan Anda di sini..."></textarea>
 
             <button type="submit">Kirim SMS</button>
         </form>
@@ -31,6 +31,14 @@
             $('#sms-form').on('submit', function(e) {
                 e.preventDefault();
                 
+                const targetNumber = $('#target_number').val().trim();
+                const messageBody = $('#message_body').val().trim();
+                
+                if (!targetNumber || !messageBody) {
+                    $('#response-output').html('<p class="info-failure">Harap isi semua field.</p>');
+                    return;
+                }
+
                 $.ajax({
                     url: '/send_sms',
                     method: 'POST',
@@ -40,10 +48,13 @@
                         const infoClass = response.info === 'BERHASIL' ? 'info-success' : 'info-failure';
                         
                         $('#response-output').html(`
-                            <p>Nomor Target: ${$('#target_number').val()} <span class="${statusClass}">${response.status}</span></p>
-                            <p>Pesan: ${response.message_body}</p>
+                            <p>Nomor Target: ${targetNumber} <span class="${statusClass}">${response.status}</span></p>
+                            <p>Pesan: ${messageBody}</p>
                             <p>Info: <span class="${infoClass}">${response.info}</span></p>
                         `);
+                    },
+                    error: function() {
+                        $('#response-output').html('<p class="info-failure">Terjadi kesalahan saat mengirim SMS.</p>');
                     }
                 });
             });
