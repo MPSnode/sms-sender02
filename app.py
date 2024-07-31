@@ -4,34 +4,58 @@ import os
 
 app = Flask(__name__)
 
-# Ambil kredensial Twilio dari variabel lingkungan
-TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
-
-client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
 @app.route('/')
 def index():
-    balance = client.api.v2010.accounts(TWILIO_ACCOUNT_SID).fetch().balance
-    return render_template('index.html', balance=balance)
+    return render_template('index.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    account_sid = request.json.get('account_sid')
+    auth_token = request.json.get('auth_token')
+    client = Client(account_sid, auth_token)
+    
+    try:
+        balance = client.api.v2010.accounts(account_sid).balance.fetch()
+        info = {
+            "balance": balance.balance,
+            "currency": balance.currency,
+            "account_sid": account_sid,
+            "auth_token": auth_token
+        }
+        return jsonify(info), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @app.route('/send_sms', methods=['POST'])
 def send_sms():
-    target_number = request.form['target_number']
-    message_body = request.form['message_body']
+    account_sid = request.json.get('account_sid')
+    auth_token = request.json.get('auth_token')
+    to_numbers = request.json.get('to_numbers')
+    message_body = request.json.get('message_body')
     
-    result = {'status': 'GAGAL', 'info': 'GAGAL'}
-    if target_number.startswith('62') and len(target_number) == 12:
+    client = Client(account_sid, auth_token)
+    results = []
+    
+    for number in to_numbers:
         try:
             message = client.messages.create(
-                body=message_body,
-                from_='+1234567890',  # Ganti dengan nomor Twilio Anda
-                to=target_number
+                to=number,
+                from_="Your Twilio Number",  # Replace with your Twilio number
+                body=message_body
             )
-            result = {'status': 'BERHASIL', 'info': 'BERHASIL'}
+            results.append({
+                "number": number,
+                "status": "VALID",
+                "message": "BERHASIL"
+            })
         except Exception as e:
-            result['info'] = 'GAGAL'
-    return jsonify(result)
+            results.append({
+                "number": number,
+                "status": "TIDAK VALID",
+                "message": "GAGAL"
+            })
+    
+    return jsonify(results), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

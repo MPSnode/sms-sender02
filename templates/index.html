@@ -3,62 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulk SMS Sender</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>SMS Bulk Sender</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Bulk SMS Sender</h1>
-        <div>
-            <p>Balance Twilio: <strong>{{ balance }} USD</strong></p>
+        <h1>SMS Bulk Sender</h1>
+        <div id="login-section" class="card">
+            <h2>Login Twilio API</h2>
+            <form id="login-form">
+                <input type="text" id="account_sid" placeholder="Account SID" required>
+                <input type="password" id="auth_token" placeholder="Auth Token" required>
+                <button type="submit">Login</button>
+            </form>
         </div>
-        <form id="sms-form">
-            <label for="target_number">Nomor Target:</label>
-            <input type="text" id="target_number" name="target_number" required placeholder="+62851******">
-
-            <label for="message_body">Pesan:</label>
-            <textarea id="message_body" name="message_body" rows="4" required placeholder="Masukkan pesan Anda di sini..."></textarea>
-
-            <button type="submit">Kirim SMS</button>
-        </form>
-
-        <div id="response-output"></div>
+        <div id="info-section" class="card" style="display:none;">
+            <h2>Twilio Info</h2>
+            <p><strong>Balance:</strong> <span id="balance"></span></p>
+            <p><strong>Currency:</strong> <span id="currency"></span></p>
+            <h2>Send SMS</h2>
+            <form id="sms-form">
+                <textarea id="message_body" placeholder="Message" required></textarea>
+                <input type="text" id="to_numbers" placeholder="Target Numbers (comma separated)" required>
+                <button type="submit">Send SMS</button>
+            </form>
+            <div id="output-section">
+                <h3>Output:</h3>
+                <div id="output" class="output-container"></div>
+            </div>
+        </div>
     </div>
-
-    <script>
-        $(document).ready(function() {
-            $('#sms-form').on('submit', function(e) {
-                e.preventDefault();
-                
-                const targetNumber = $('#target_number').val().trim();
-                const messageBody = $('#message_body').val().trim();
-                
-                if (!targetNumber || !messageBody) {
-                    $('#response-output').html('<p class="info-failure">Harap isi semua field.</p>');
-                    return;
-                }
-
-                $.ajax({
-                    url: '/send_sms',
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    success: function(response) {
-                        const statusClass = response.status === 'BERHASIL' ? 'status-valid' : 'status-invalid';
-                        const infoClass = response.info === 'BERHASIL' ? 'info-success' : 'info-failure';
-                        
-                        $('#response-output').html(`
-                            <p>Nomor Target: ${targetNumber} <span class="${statusClass}">${response.status}</span></p>
-                            <p>Pesan: ${messageBody}</p>
-                            <p>Info: <span class="${infoClass}">${response.info}</span></p>
-                        `);
-                    },
-                    error: function() {
-                        $('#response-output').html('<p class="info-failure">Terjadi kesalahan saat mengirim SMS.</p>');
-                    }
-                });
-            });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
